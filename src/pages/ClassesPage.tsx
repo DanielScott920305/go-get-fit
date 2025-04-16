@@ -1,10 +1,13 @@
 
 import React, { useState } from "react";
 import { Filter, Search, Dumbbell, Calendar, Users } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ClassCard from "@/components/classes/ClassCard";
+import ClassCalendar from "@/components/classes/ClassCalendar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Mock data for classes
 const classesData = [
@@ -130,8 +133,10 @@ const ClassesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const isMobile = useIsMobile();
   
-  // Filter classes based on search query and selected category
+  // Filter classes based on search query, selected category, and date
   const filteredClasses = classesData.filter((classItem) => {
     const matchesSearch = classItem.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         classItem.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,131 +147,166 @@ const ClassesPage: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    // In a real app, you would filter classes by this date
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-fitness-dark mb-2">Browse Classes</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-fitness-dark mb-2">Browse Classes</h1>
         <p className="text-gray-600">
           Find and book fitness classes that match your schedule and goals
         </p>
       </div>
       
-      {/* Search and Filter */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Search classes, instructors, or locations..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+      {/* Calendar for Desktop & Search and Filter */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendar - Only visible on desktop as a sidebar */}
+        {!isMobile && (
+          <div className="lg:col-span-1">
+            <ClassCalendar 
+              onDateSelect={handleDateSelect}
+              selectedDate={selectedDate}
+              className="sticky top-6"
             />
           </div>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-5 w-5" />
-            Filters
-          </Button>
-        </div>
-        
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <Badge
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              className={`cursor-pointer text-sm py-1 px-3 ${
-                selectedCategory === category 
-                  ? "bg-fitness-primary hover:bg-fitness-secondary"
-                  : "hover:bg-fitness-light"
-              }`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </Badge>
-          ))}
-        </div>
-        
-        {/* Advanced Filters (toggleable) */}
-        {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="space-y-2">
-              <div className="flex items-center text-sm font-medium text-fitness-dark">
-                <Dumbbell className="h-4 w-4 mr-2 text-fitness-primary" />
-                Intensity Level
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Beginner</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Intermediate</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Advanced</Badge>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center text-sm font-medium text-fitness-dark">
-                <Calendar className="h-4 w-4 mr-2 text-fitness-primary" />
-                Time of Day
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Morning</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Afternoon</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Evening</Badge>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center text-sm font-medium text-fitness-dark">
-                <Users className="h-4 w-4 mr-2 text-fitness-primary" />
-                Class Size
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Small</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Medium</Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Large</Badge>
-              </div>
-            </div>
-          </div>
         )}
-      </div>
-      
-      {/* Search Results */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-fitness-dark">
-            {filteredClasses.length} Classes Found
-          </h2>
-          <div className="flex items-center text-sm text-gray-500">
-            <span>Sort by:</span>
-            <select className="ml-2 bg-transparent border-none focus:outline-none text-fitness-primary font-medium">
-              <option>Recommended</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-              <option>Rating</option>
-            </select>
-          </div>
-        </div>
         
-        {/* Grid of Class Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredClasses.map((classItem) => (
-            <ClassCard key={classItem.id} {...classItem} />
-          ))}
-        </div>
-        
-        {/* Empty State */}
-        {filteredClasses.length === 0 && (
-          <div className="text-center py-16 px-4">
-            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Search className="h-8 w-8 text-gray-400" />
+        {/* Search and Classes - Takes full width on mobile, 2/3 on desktop */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Search and Filter */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  placeholder="Search classes, instructors, or locations..."
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-5 w-5" />
+                <span>Filters</span>
+              </Button>
             </div>
-            <h3 className="text-xl font-semibold text-fitness-dark mb-2">No classes found</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
-              We couldn't find any classes matching your search. Try adjusting your filters or search query.
-            </p>
+            
+            {/* Calendar for Mobile - Horizontal scrolling */}
+            {isMobile && (
+              <ClassCalendar 
+                onDateSelect={handleDateSelect}
+                selectedDate={selectedDate}
+              />
+            )}
+            
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <Badge
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  className={`cursor-pointer text-sm py-1 px-3 ${
+                    selectedCategory === category 
+                      ? "bg-fitness-primary hover:bg-fitness-secondary"
+                      : "hover:bg-fitness-light"
+                  }`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </Badge>
+              ))}
+            </div>
+            
+            {/* Advanced Filters (toggleable) */}
+            {showFilters && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm font-medium text-fitness-dark">
+                    <Dumbbell className="h-4 w-4 mr-2 text-fitness-primary" />
+                    Intensity Level
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Beginner</Badge>
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Intermediate</Badge>
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Advanced</Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm font-medium text-fitness-dark">
+                    <Calendar className="h-4 w-4 mr-2 text-fitness-primary" />
+                    Time of Day
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Morning</Badge>
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Afternoon</Badge>
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Evening</Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm font-medium text-fitness-dark">
+                    <Users className="h-4 w-4 mr-2 text-fitness-primary" />
+                    Class Size
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Small</Badge>
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Medium</Badge>
+                    <Badge variant="outline" className="cursor-pointer hover:bg-fitness-light">Large</Badge>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+          
+          {/* Search Results */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-fitness-dark">
+                {filteredClasses.length} Classes Found
+                {selectedDate && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    on {format(selectedDate, "MMM d, yyyy")}
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="hidden sm:inline">Sort by:</span>
+                <select className="ml-2 bg-transparent border-none focus:outline-none text-fitness-primary font-medium">
+                  <option>Recommended</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                  <option>Rating</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* Grid of Class Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6">
+              {filteredClasses.map((classItem) => (
+                <ClassCard key={classItem.id} {...classItem} />
+              ))}
+            </div>
+            
+            {/* Empty State */}
+            {filteredClasses.length === 0 && (
+              <div className="text-center py-16 px-4">
+                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Search className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-fitness-dark mb-2">No classes found</h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  We couldn't find any classes matching your search. Try adjusting your filters or search query.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
