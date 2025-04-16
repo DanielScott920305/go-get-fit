@@ -98,4 +98,27 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Fitness app custom styling */
+  .fitness-gradient {
+    @apply bg-gradient-to-r from-fitness-primary to-fitness-secondary;
+  }
+
+  .fitness-card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300;
+  }
+
+  /* Animations for fitness elements */
+  .pulse-on-hover:hover {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
 }
